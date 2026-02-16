@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netlify Form Detection</title>
+</head>
+<body>
+    <!-- This file is used by Netlify to detect the form at build time (best practice for Astro/SSR) -->
+    <form name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+        <input type="hidden" name="form-name" value="contact" />
+        <input name="bot-field" />
+        <input type="text" name="name" />
+        <input type="email" name="email" />
+        <textarea name="message"></textarea>
+        <button type="submit">Send</button>
+    </form>
+</body>
+</html>

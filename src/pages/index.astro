@@ -1,0 +1,135 @@
+---
+import Layout from "../layouts/Layout.astro";
+import WeddingSection from "../components/WeddingSection.astro";
+import WeddingSideNav from "../components/WeddingSideNav.astro";
+import { client } from "../utils/sanity-client";
+
+const query = `*[_type == "weddingSection"] | order(order asc)`;
+let sections = [];
+
+try {
+    sections = await client.fetch(query);
+} catch (error) {
+    console.error("Error fetching wedding sections:", error);
+}
+
+// Fallback content if Sanity is empty
+if (!sections || sections.length === 0) {
+    sections = [
+        {
+            _id: "story",
+            title: "Náš příběh",
+            type: "story",
+            image: "/images/wedding/story.png",
+            content: [
+                {
+                    _type: "block",
+                    children: [
+                        {
+                            _type: "span",
+                            text: 'Náš příběh se začal psát jednoho zimního večera na Karlově mostě. Od té chvíle jsme věděli, že naše cesty už půjdou společně. Prošli jsme spolu mnoha dobrodružstvími, smáli se i plakali, a nyní jsme připraveni říct si své "ANO" před vámi všemi.',
+                        },
+                    ],
+                },
+            ],
+            order: 1,
+        },
+        {
+            _id: "ceremony",
+            title: "Obřad",
+            type: "ceremony",
+            image: "/images/wedding/ceremony.png",
+            content: [
+                {
+                    _type: "block",
+                    children: [
+                        {
+                            _type: "span",
+                            text: "Svatební obřad se uskuteční 15. února 2026 ve 13:00 hodin. Prosíme o příjezd alespoň 15 minut předem, abychom se všichni stihli usadit. Místo: Kostel svatého Mikuláše, Malá Strana, Praha.",
+                        },
+                    ],
+                },
+            ],
+            order: 2,
+        },
+        {
+            _id: "celebration",
+            title: "Oslava",
+            type: "celebration",
+            image: "/images/wedding/celebration.png",
+            content: [
+                {
+                    _type: "block",
+                    children: [
+                        {
+                            _type: "span",
+                            text: "Po obřadu se přesuneme na svatební hostinu v restauraci Nebozízek. Čeká nás skvělé jídlo, dobré pití a zábava až do rána na jedné z nejkrásnějších vyhlídek v Praze.",
+                        },
+                    ],
+                },
+            ],
+            order: 3,
+        },
+        {
+            _id: "program",
+            title: "Program dne",
+            type: "other",
+            content: [
+                {
+                    _type: "block",
+                    children: [
+                        {
+                            _type: "span",
+                            text: "13:00 - Svatební obřad\n14:30 - Společné focení a přípitek\n15:30 - Svatební hostina\n18:00 - První tanec & Party\n22:00 - Půlnoční překvapení",
+                        },
+                    ],
+                },
+            ],
+            order: 4,
+        },
+        {
+            _id: "gifts",
+            title: "Tipy na dárky",
+            type: "other",
+            content: [
+                {
+                    _type: "block",
+                    children: [
+                        {
+                            _type: "span",
+                            text: "Největším dárkem pro nás bude vaše přítomnost a úsměv na tváři. Pokud nás však chcete obdarovat, budeme vděčni za jakýkoliv příspěvek na naši svatební cestu, kterou si chceme náležitě užít.",
+                        },
+                    ],
+                },
+            ],
+            order: 5,
+        },
+    ];
+}
+---
+
+<Layout title="Svatba Goliášovi">
+    <main class="relative scroll-smooth">
+        <WeddingSideNav />
+
+        {
+            sections.map((section) => (
+                <WeddingSection
+                    id={
+                        section.type === "story"
+                            ? "story"
+                            : section.type === "ceremony"
+                              ? "ceremony"
+                              : section.type === "celebration"
+                                ? "celebration"
+                                : section._id
+                    }
+                    title={section.title}
+                    type={section.type}
+                    content={section.content}
+                    image={section.image}
+                />
+            ))
+        }
+    </main>
+</Layout>

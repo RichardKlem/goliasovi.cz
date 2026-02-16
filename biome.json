@@ -1,0 +1,50 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "files": {
+    "ignore": ["dist/**", ".env*", ".astro/**", "node_modules/**"]
+  },
+  "organizeImports": {
+    "enabled": true
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 4,
+    "lineWidth": 160
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "trailingCommas": "none"
+    }
+  },
+  "json": {
+    "formatter": {
+      "indentWidth": 2
+    }
+  },
+  "overrides": [
+    {
+      "include": ["*.md", "*.yaml", "*.yml"],
+      "formatter": {
+        "indentWidth": 2
+      }
+    },
+    {
+      "include": ["src/styles/globals.css"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnknownProperty": "off"
+          }
+        }
+      }
+    }
+  ]
+}

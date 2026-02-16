@@ -1,0 +1,25 @@
+---
+import { marked } from 'marked';
+import type { Footer } from 'types';
+
+interface Props extends Footer {
+    'data-sb-field-path'?: string;
+}
+
+const { text, 'data-sb-field-path': fieldPath } = Astro.props;
+---
+
+{
+    text && (
+        <footer
+            class="px-4 py-12 sm:px-5 sm:py-16 border-t border-base-content/10 bg-base-200/50 backdrop-blur-sm"
+            data-sb-field-path={fieldPath}
+        >
+            <div
+                class="mx-auto text-center max-w-7xl font-mono text-xs uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity"
+                data-sb-field-path=".text"
+                set:html={marked.parse(text)}
+            />
+        </footer>
+    )
+}
