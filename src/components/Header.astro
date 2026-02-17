@@ -1,19 +1,13 @@
 ---
-import Action from "@components/Action.astro";
-import ResponsiveImage from "@components/ResponsiveImage.astro";
-import type { Header } from "types";
+import Action from '@components/Action.astro';
+import ResponsiveImage from '@components/ResponsiveImage.astro';
+import type { Header } from 'types';
 
 interface Props extends Header {
-    "data-sb-field-path"?: string;
+    'data-sb-field-path'?: string;
 }
 
-const {
-    title,
-    logo,
-    logoIcon,
-    navLinks,
-    "data-sb-field-path": fieldPath,
-} = Astro.props;
+const { title, logo, logoIcon, navLinks, 'data-sb-field-path': fieldPath } = Astro.props;
 ---
 
 <nav

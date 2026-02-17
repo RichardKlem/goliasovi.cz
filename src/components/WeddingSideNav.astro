@@ -1,11 +1,12 @@
 ---
-const sections = [
-    { id: "story", label: "Náš příběh" },
-    { id: "ceremony", label: "Obřad" },
-    { id: "celebration", label: "Oslava" },
-    { id: "program", label: "Program" },
-    { id: "gifts", label: "Tipy na dárky" },
-];
+interface Props {
+    sections: Array<{
+        id: string;
+        label: string;
+    }>;
+}
+
+const { sections } = Astro.props;
 ---
 
 <nav class="fixed right-4 top-1/2 -translate-y-1/2 z-50 hidden md:block">

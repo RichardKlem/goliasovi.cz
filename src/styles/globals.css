@@ -3,47 +3,47 @@
 
 @plugin "daisyui/theme" {
     name: "dark";
-    --color-primary: #D4A5A5;
+    --color-primary: #d4a5a5;
     /* Dusty Rose */
-    --color-primary-content: #F5E6CC;
-    --color-secondary: #90A4AE;
+    --color-primary-content: #f5e6cc;
+    --color-secondary: #90a4ae;
     /* Muted Slate */
-    --color-secondary-content: #F5E6CC;
-    --color-accent: #C5B358;
+    --color-secondary-content: #f5e6cc;
+    --color-accent: #c5b358;
     /* Muted Gold */
-    --color-accent-content: #1A1A1A;
+    --color-accent-content: #1a1a1a;
     --color-neutral: #454545;
-    --color-neutral-content: #F5E6CC;
-    --color-base-100: #2D2D2D;
+    --color-neutral-content: #f5e6cc;
+    --color-base-100: #2d2d2d;
     /* Classy warm dark */
-    --color-base-200: #3D3D3D;
-    --color-base-300: #4D4D4D;
-    --color-base-content: #F5E6CC;
+    --color-base-200: #3d3d3d;
+    --color-base-300: #4d4d4d;
+    --color-base-content: #f5e6cc;
     /* Champagne text */
-    --color-info: #78909C;
-    --color-success: #81C784;
-    --color-warning: #FFD54F;
-    --color-error: #E57373;
+    --color-info: #78909c;
+    --color-success: #81c784;
+    --color-warning: #ffd54f;
+    --color-error: #e57373;
 }
 
 @plugin "daisyui/theme" {
     name: "light";
-    --color-primary: #F8C8DC;
+    --color-primary: #f8c8dc;
     /* Pastel Rose */
-    --color-primary-content: #4A4A4A;
-    --color-secondary: #E0F2F1;
+    --color-primary-content: #4a4a4a;
+    --color-secondary: #e0f2f1;
     /* Soft Mint/Sage */
-    --color-secondary-content: #4A4A4A;
-    --color-accent: #FFF9E3;
+    --color-secondary-content: #4a4a4a;
+    --color-accent: #fff9e3;
     /* Champagne/Cream */
-    --color-accent-content: #4A4A4A;
-    --color-neutral: #E6E6FA;
+    --color-accent-content: #4a4a4a;
+    --color-neutral: #e6e6fa;
     /* Lavender */
-    --color-neutral-content: #4A4A4A;
-    --color-base-100: #FFFAFA;
+    --color-neutral-content: #4a4a4a;
+    --color-base-100: #fffafa;
     /* Snow White */
-    --color-base-200: #F5F5F5;
-    --color-base-content: #4A4A4A;
+    --color-base-200: #f5f5f5;
+    --color-base-content: #4a4a4a;
 }
 
 /* Global Styles for Tech/Flashy Look */
@@ -67,8 +67,7 @@ body::before {
     pointer-events: none;
     z-index: -1;
     /* Rich, subtle wedding palette glow */
-    background-image:
-        radial-gradient(circle at 10% 10%, rgba(248, 200, 220, 0.15), transparent 40%),
+    background-image: radial-gradient(circle at 10% 10%, rgba(248, 200, 220, 0.15), transparent 40%),
         radial-gradient(circle at 90% 90%, rgba(224, 242, 241, 0.15), transparent 45%),
         radial-gradient(circle at 50% 50%, rgba(255, 249, 227, 0.1), transparent 60%);
     background-color: var(--color-base-100);
@@ -94,8 +93,7 @@ body::after {
     pointer-events: none;
     z-index: -2;
     background-size: 60px 60px;
-    background-image:
-        radial-gradient(circle at 1px 1px, var(--color-base-content) 1px, transparent 1px);
+    background-image: radial-gradient(circle at 1px 1px, var(--color-base-content) 1px, transparent 1px);
     opacity: 0.05;
 }
 

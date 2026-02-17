@@ -31,7 +31,6 @@ export function urlForImage(source: any) {
     return builder.image(source);
 }
 
-
 /**
  * @param {SanityClient} client The Sanity client to add the listener to
  * @param {Array<String>} types An array of types the listener should take an action on

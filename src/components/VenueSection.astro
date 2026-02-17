@@ -1,0 +1,177 @@
+---
+interface Props {
+    id: string;
+    title: string;
+    subtitle?: string;
+    churchTitle?: string;
+    churchMap?: string;
+    churchDirectionsUrl?: string;
+    venueTitle?: string;
+    venueMap?: string;
+    venueDirectionsUrl?: string;
+}
+
+const { id, title, subtitle, churchTitle = 'Obřad', churchMap, churchDirectionsUrl, venueTitle = 'Oslava', venueMap, venueDirectionsUrl } = Astro.props;
+---
+
+<section
+    id={id}
+    class="wedding-section py-20 px-6 md:px-12 flex items-center justify-center relative overflow-hidden bg-base-100 text-base-content"
+>
+    <!-- Parallax/Transparency Overlay -->
+    <div
+        class="absolute inset-0 z-0 pointer-events-none bg-base-100 opacity-60 backdrop-blur-3xl"
+    >
+    </div>
+    <div
+        class="absolute inset-0 z-0 pointer-events-none opacity-20 bg-linear-to-b from-transparent via-primary/5 to-transparent"
+    >
+    </div>
+    <div
+        class="max-w-6xl w-full mx-auto relative z-10 transition-all duration-1000 transform translate-y-12 opacity-0 reveal-container"
+    >
+        <div class="text-center mb-16 space-y-4">
+            {
+                subtitle && (
+                    <span class="font-['Dancing_Script'] text-2xl md:text-3xl text-primary block reveal-item-1">
+                        {subtitle}
+                    </span>
+                )
+            }
+            <h2
+                class="text-5xl md:text-6xl font-['Playfair_Display'] font-black reveal-item-1"
+            >
+                {title}
+            </h2>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-12 lg:gap-16">
+            {
+                churchMap && (
+                    <div class="space-y-6 reveal-item-2 flex flex-col items-center">
+                        <h3 class="text-3xl font-['Playfair_Display'] font-bold text-center">
+                            {churchTitle}
+                        </h3>
+                        <div
+                            class="aspect-video w-full rounded-3xl overflow-hidden shadow-xl border-4 border-white/10"
+                            set:html={churchMap}
+                        />
+                        {churchDirectionsUrl && (
+                            <a
+                                href={churchDirectionsUrl}
+                                target="_blank"
+                                class="btn btn-primary btn-lg rounded-full px-8 shadow-lg hover:shadow-primary/20 transition-all font-['Playfair_Display'] font-bold"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    class="w-6 h-6 mr-2"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M16 12l-4-4-4 4M12 8v8" />
+                                </svg>
+                                Navigovat k obřadu
+                            </a>
+                        )}
+                    </div>
+                )
+            }
+
+            {
+                venueMap && (
+                    <div class="space-y-6 reveal-item-3 flex flex-col items-center">
+                        <h3 class="text-3xl font-['Playfair_Display'] font-bold text-center">
+                            {venueTitle}
+                        </h3>
+                        <div
+                            class="aspect-video w-full rounded-3xl overflow-hidden shadow-xl border-4 border-white/10"
+                            set:html={venueMap}
+                        />
+                        {venueDirectionsUrl && (
+                            <a
+                                href={venueDirectionsUrl}
+                                target="_blank"
+                                class="btn btn-primary btn-lg rounded-full px-8 shadow-lg hover:shadow-primary/20 transition-all font-['Playfair_Display'] font-bold"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    class="w-6 h-6 mr-2"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M16 12l-4-4-4 4M12 8v8" />
+                                </svg>
+                                Navigovat na oslavu
+                            </a>
+                        )}
+                    </div>
+                )
+            }
+        </div>
+    </div>
+</section>
+
+<script>
+    const observerOptions = {
+        threshold: 0.15,
+        rootMargin: "0px",
+    };
+
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                const container =
+                    entry.target.querySelector(".reveal-container");
+                container?.classList.remove("translate-y-12", "opacity-0");
+                container?.classList.add("translate-y-0", "opacity-100");
+
+                // Trigger sub-items
+                entry.target
+                    .querySelectorAll('[class*="reveal-item-"]')
+                    .forEach((item, index) => {
+                        setTimeout(() => {
+                            item.classList.add("active");
+                        }, index * 200);
+                    });
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll(".wedding-section").forEach((section) => {
+        revealObserver.observe(section);
+    });
+</script>
+
+<style>
+    /* Reuse the same animation classes as WeddingSection */
+    .reveal-item-1,
+    .reveal-item-2,
+    .reveal-item-3 {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 1s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .reveal-item-1.active,
+    .reveal-item-2.active,
+    .reveal-item-3.active {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Style for iframes to be responsive */
+    :global(iframe) {
+        width: 100% !important;
+        height: 100% !important;
+    }
+</style>

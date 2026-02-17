@@ -5,9 +5,10 @@ import badge from './badge';
 import customImage from './customImage';
 import footer from './footer';
 import header from './header';
-import page from './page';
+import weddingPage from './weddingPage';
 import siteConfig from './siteConfig';
 import { weddingSection } from './weddingSection';
+import { venueSection } from './venueSection';
 
 export const schemaTypes = [
     actionButton,
@@ -17,7 +18,8 @@ export const schemaTypes = [
     customImage,
     footer,
     header,
-    page,
+    weddingPage,
     siteConfig,
-    weddingSection
+    weddingSection,
+    venueSection
 ];
