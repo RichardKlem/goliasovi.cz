@@ -1,0 +1,237 @@
+---
+import ResponsiveImage from './ResponsiveImage.astro';
+
+interface ImageType {
+    asset: {
+        _id: string;
+        url: string;
+        metadata: {
+            dimensions: {
+                width: number;
+                height: number;
+            };
+        };
+    };
+    hotspot?: {
+        x: number;
+        y: number;
+    };
+}
+
+interface Props {
+    id: string;
+    title: string;
+    subtitle?: string;
+    images: ImageType[];
+}
+
+const { id, title, subtitle, images } = Astro.props;
+const hasImages = images && images.length > 0;
+---
+
+<section id={id} class="relative py-24 md:py-32 overflow-hidden bg-stone-50">
+    <div class="container mx-auto px-4 md:px-8 relative z-10">
+        <div class="text-center max-w-3xl mx-auto mb-16">
+            <h2 class="font-serif text-4xl md:text-5xl lg:text-6xl text-stone-900 mb-6 font-medium tracking-tight">
+                {title}
+            </h2>
+            {subtitle && (
+                <p class="text-lg md:text-xl text-stone-600 font-light tracking-wide">
+                    {subtitle}
+                </p>
+            )}
+        </div>
+
+        {hasImages ? (
+            <div class="gallery-wrapper relative max-w-5xl mx-auto h-[400px] md:h-[600px] flex items-center justify-center perspective-[1000px]">
+                {images.map((img, idx) => (
+                    <div 
+                        class="gallery-item absolute w-[80%] md:w-[60%] h-full rounded-2xl shadow-xl overflow-hidden cursor-pointer transition-all duration-700 ease-in-out select-none will-change-transform"
+                        data-index={idx}
+                        data-url={img.asset.url}
+                    >
+                        <ResponsiveImage 
+                            src={img.asset.url}
+                            width={img.asset.metadata?.dimensions?.width || 800}
+                            height={img.asset.metadata?.dimensions?.height || 600}
+                            _id={img.asset._id}
+                            alt={`Gallery image ${idx + 1}`} 
+                            class="w-full h-full object-cover" 
+                        />
+                    </div>
+                ))}
+            </div>
+        ) : (
+            <p class="text-center text-stone-500">Zatím zde nejsou žádné fotky.</p>
+        )}
+    </div>
+
+    <!-- Lightbox -->
+    <div id="gallery-lightbox" class="fixed inset-0 z-50 bg-black/95 hidden opacity-0 transition-opacity duration-300 flex items-center justify-center">
+        <button id="lightbox-close" class="absolute top-6 right-6 text-white/70 hover:text-white z-50 p-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+        <button id="lightbox-prev" class="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 text-white/70 hover:text-white z-50 p-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <button id="lightbox-next" class="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 text-white/70 hover:text-white z-50 p-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+        <div class="w-full h-full p-4 md:p-12 flex items-center justify-center">
+            <img id="lightbox-img" src="" alt="Fullscreen image" class="max-w-full max-h-full object-contain rounded-md shadow-2xl" />
+        </div>
+    </div>
+</section>
+
+<script>
+    function initGallery() {
+        const items = document.querySelectorAll('.gallery-item');
+        if (items.length === 0) return;
+
+        let currentIndex = 0;
+        let slideInterval: number;
+        const totalItems = items.length;
+
+        function updateGallery() {
+            items.forEach((item, index) => {
+                const htmlItem = item as HTMLElement;
+                htmlItem.style.opacity = '0';
+                htmlItem.style.zIndex = '1';
+                htmlItem.style.transform = 'translateX(0) scale(0.6)';
+                htmlItem.style.pointerEvents = 'none';
+
+                if (index === currentIndex) {
+                    htmlItem.style.opacity = '1';
+                    htmlItem.style.zIndex = '3';
+                    htmlItem.style.transform = 'translateX(0) scale(1)';
+                    htmlItem.style.pointerEvents = 'auto';
+                } else if (index === (currentIndex - 1 + totalItems) % totalItems) {
+                    htmlItem.style.opacity = '0.5';
+                    htmlItem.style.zIndex = '2';
+                    htmlItem.style.transform = 'translateX(-40%) scale(0.8)';
+                    htmlItem.style.pointerEvents = 'auto';
+                } else if (index === (currentIndex + 1) % totalItems) {
+                    htmlItem.style.opacity = '0.5';
+                    htmlItem.style.zIndex = '2';
+                    htmlItem.style.transform = 'translateX(40%) scale(0.8)';
+                    htmlItem.style.pointerEvents = 'auto';
+                }
+            });
+        }
+
+        function nextSlide() {
+            currentIndex = (currentIndex + 1) % totalItems;
+            updateGallery();
+        }
+
+        function prevSlide() {
+            currentIndex = (currentIndex - 1 + totalItems) % totalItems;
+            updateGallery();
+        }
+
+        function startSlideshow() {
+            stopSlideshow();
+            slideInterval = window.setInterval(nextSlide, 3000);
+        }
+
+        function stopSlideshow() {
+            if (slideInterval) clearInterval(slideInterval);
+        }
+
+        // Initialize Carousel
+        updateGallery();
+        startSlideshow();
+
+        // Pause on hover
+        const wrapper = document.querySelector('.gallery-wrapper');
+        if (wrapper) {
+            wrapper.addEventListener('mouseenter', stopSlideshow);
+            wrapper.addEventListener('mouseleave', startSlideshow);
+        }
+
+        // Lightbox Logic
+        const lightbox = document.getElementById('gallery-lightbox');
+        const lightboxImg = document.getElementById('lightbox-img') as HTMLImageElement;
+        const closeBtn = document.getElementById('lightbox-close');
+        const nextBtn = document.getElementById('lightbox-next');
+        const prevBtn = document.getElementById('lightbox-prev');
+
+        let lightboxIndex = 0;
+
+        function openLightbox(index: number) {
+            lightboxIndex = index;
+            const url = items[index].getAttribute('data-url');
+            if (url) {
+                lightboxImg.src = url;
+                if (lightbox) {
+                    lightbox.classList.remove('hidden');
+                    // Small delay to allow display:block to apply before transition
+                    setTimeout(() => {
+                        lightbox.classList.remove('opacity-0');
+                        lightbox.classList.add('opacity-100');
+                    }, 10);
+                }
+                stopSlideshow();
+                document.body.style.overflow = 'hidden'; // Prevent scrolling
+            }
+        }
+
+        function closeLightbox() {
+            if (lightbox) {
+                lightbox.classList.remove('opacity-100');
+                lightbox.classList.add('opacity-0');
+                setTimeout(() => {
+                    lightbox.classList.add('hidden');
+                }, 300); // match duration
+            }
+            startSlideshow();
+            document.body.style.overflow = ''; // Restore scrolling
+        }
+
+        function updateLightboxImage() {
+            const url = items[lightboxIndex].getAttribute('data-url');
+            if (url) lightboxImg.src = url;
+        }
+
+        items.forEach((item, idx) => {
+            item.addEventListener('click', () => {
+                if (idx === currentIndex) {
+                    openLightbox(idx);
+                } else if (idx === (currentIndex - 1 + totalItems) % totalItems) {
+                    prevSlide();
+                } else if (idx === (currentIndex + 1) % totalItems) {
+                    nextSlide();
+                }
+            });
+        });
+
+        closeBtn?.addEventListener('click', closeLightbox);
+        nextBtn?.addEventListener('click', () => {
+            lightboxIndex = (lightboxIndex + 1) % totalItems;
+            updateLightboxImage();
+        });
+        prevBtn?.addEventListener('click', () => {
+            lightboxIndex = (lightboxIndex - 1 + totalItems) % totalItems;
+            updateLightboxImage();
+        });
+
+        // Close on ESC, navigate with arrows
+        document.addEventListener('keydown', (e) => {
+            if (!lightbox?.classList.contains('hidden')) {
+                if (e.key === 'Escape') closeLightbox();
+                if (e.key === 'ArrowRight') {
+                    lightboxIndex = (lightboxIndex + 1) % totalItems;
+                    updateLightboxImage();
+                }
+                if (e.key === 'ArrowLeft') {
+                    lightboxIndex = (lightboxIndex - 1 + totalItems) % totalItems;
+                    updateLightboxImage();
+                }
+            }
+        });
+    }
+
+    // Run on initial load and view transitions
+    document.addEventListener('astro:page-load', initGallery);
+    initGallery();
+</script>

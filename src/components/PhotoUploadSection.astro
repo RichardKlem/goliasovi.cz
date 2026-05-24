@@ -1,0 +1,320 @@
+---
+interface Props {
+    id: string;
+    title: string;
+    subtitle?: string;
+    description?: string;
+    uploadEndpointUrl: string;
+}
+
+const { id, title, subtitle, description, uploadEndpointUrl } = Astro.props;
+---
+
+<section id={id} class="relative py-24 md:py-32 bg-white">
+    <div class="container mx-auto px-4 md:px-8 relative z-10 max-w-3xl">
+        <div class="text-center mb-12">
+            <h2 class="font-serif text-4xl md:text-5xl lg:text-6xl text-stone-900 mb-6 font-medium tracking-tight">
+                {title}
+            </h2>
+            {subtitle && (
+                <p class="text-xl md:text-2xl text-stone-700 font-serif mb-4">
+                    {subtitle}
+                </p>
+            )}
+            {description && (
+                <p class="text-lg text-stone-600 font-light tracking-wide">
+                    {description}
+                </p>
+            )}
+        </div>
+
+        <div class="bg-stone-50 rounded-2xl p-6 md:p-10 shadow-sm border border-stone-100">
+            <form id="photo-upload-form" class="space-y-6" data-endpoint={uploadEndpointUrl}>
+                <div id="upload-password-container">
+                    <label for="upload-password" class="block text-sm font-medium text-stone-700 mb-2">Heslo (Password)</label>
+                    <div class="relative">
+                        <input 
+                            type="password" 
+                            id="upload-password" 
+                            name="password" 
+                            required 
+                            class="w-full px-4 py-3 rounded-lg border border-stone-300 focus:ring-2 focus:ring-stone-400 focus:border-stone-400 transition-colors pr-12"
+                            placeholder="Zadejte heslo..."
+                        />
+                        <button type="button" id="upload-password-toggle" class="absolute inset-y-0 right-0 flex items-center pr-3 text-stone-400 hover:text-stone-600 focus:outline-none" title="Zobrazit heslo">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-2">Vyberte fotky (Select photos)</label>
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-stone-300 border-dashed rounded-lg hover:border-stone-400 transition-colors bg-white relative cursor-pointer" id="drop-zone">
+                        <div class="space-y-1 text-center">
+                            <svg class="mx-auto h-12 w-12 text-stone-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <div class="flex text-sm text-stone-600 justify-center">
+                                <label for="file-upload" class="relative cursor-pointer rounded-md font-medium text-stone-900 hover:text-stone-700 focus-within:outline-none">
+                                    <span>Nahrajte soubory</span>
+                                    <input id="file-upload" name="file-upload" type="file" class="sr-only" multiple accept="image/*" />
+                                </label>
+                                <p class="pl-1">nebo přetáhněte sem</p>
+                            </div>
+                            <p class="text-xs text-stone-500">
+                                PNG, JPG, GIF do 10MB
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="file-list" class="space-y-2 hidden">
+                    <!-- File list will be injected here -->
+                </div>
+
+                <button 
+                    type="submit" 
+                    id="submit-btn"
+                    class="w-full bg-stone-900 text-white py-3 px-4 rounded-lg font-medium hover:bg-stone-800 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-900 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                >
+                    <span>Odeslat fotky</span>
+                    <svg id="loading-spinner" class="animate-spin h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
+                
+                <div id="status-message" class="hidden rounded-lg p-4 text-sm text-center"></div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<script>
+    function initUploader() {
+        const form = document.getElementById('photo-upload-form') as HTMLFormElement;
+        const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+        const dropZone = document.getElementById('drop-zone');
+        const fileList = document.getElementById('file-list');
+        const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const statusMessage = document.getElementById('status-message');
+        const passwordInput = document.getElementById('upload-password') as HTMLInputElement;
+        const passwordToggle = document.getElementById('upload-password-toggle') as HTMLButtonElement;
+
+        const passwordContainer = document.getElementById('upload-password-container');
+
+        if (!form || !fileInput || !dropZone) return;
+
+        let selectedFiles: File[] = [];
+
+        // Load cached password
+        const cachedPassword = localStorage.getItem('wedding_guest_password');
+        if (cachedPassword && passwordInput) {
+            passwordInput.value = cachedPassword;
+            if (passwordContainer) passwordContainer.classList.add('hidden');
+        }
+
+        // Toggle password visibility
+        if (passwordToggle && passwordInput) {
+            passwordToggle.addEventListener('click', () => {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    passwordToggle.innerHTML = `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>`;
+                } else {
+                    passwordInput.type = 'password';
+                    passwordToggle.innerHTML = `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>`;
+                }
+            });
+        }
+
+        // Handle file selection
+        fileInput.addEventListener('change', (e) => {
+            const files = (e.target as HTMLInputElement).files;
+            if (files) {
+                addFiles(Array.from(files));
+            }
+        });
+
+        // Drag and drop support
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-stone-500', 'bg-stone-100');
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-stone-500', 'bg-stone-100');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-stone-500', 'bg-stone-100');
+            const files = e.dataTransfer?.files;
+            if (files) {
+                addFiles(Array.from(files));
+            }
+        });
+
+        // Click on dropzone triggers file input
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        function addFiles(files: File[]) {
+            const imageFiles = files.filter(f => f.type.startsWith('image/'));
+            selectedFiles = [...selectedFiles, ...imageFiles];
+            updateFileList();
+        }
+
+        function removeFile(index: number) {
+            selectedFiles.splice(index, 1);
+            updateFileList();
+        }
+
+        function updateFileList() {
+            if (!fileList) return;
+            
+            if (selectedFiles.length === 0) {
+                fileList.classList.add('hidden');
+                return;
+            }
+
+            fileList.classList.remove('hidden');
+            fileList.innerHTML = selectedFiles.map((file, idx) => `
+                <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-stone-200">
+                    <span class="text-sm text-stone-600 truncate mr-4">${file.name}</span>
+                    <button type="button" class="text-stone-400 hover:text-red-500 transition-colors remove-file-btn" data-index="${idx}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            `).join('');
+
+            // Add event listeners to remove buttons
+            const removeBtns = fileList.querySelectorAll('.remove-file-btn');
+            removeBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const idx = parseInt(btn.getAttribute('data-index') || '0', 10);
+                    removeFile(idx);
+                });
+            });
+        }
+
+        // Convert file to Base64
+        function getBase64(file: File): Promise<string> {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => {
+                    let encoded = reader.result?.toString().replace(/^data:(.*,)?/, '') || '';
+                    if ((encoded.length % 4) > 0) {
+                        encoded += '='.repeat(4 - (encoded.length % 4));
+                    }
+                    resolve(encoded);
+                };
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (selectedFiles.length === 0) {
+                showStatus('Prosím, vyberte alespoň jednu fotku.', 'error');
+                return;
+            }
+
+            const endpointUrl = form.getAttribute('data-endpoint');
+            if (!endpointUrl) {
+                showStatus('Nastavení odesílání není platné.', 'error');
+                return;
+            }
+
+            const password = passwordInput.value;
+            
+            // Set loading state
+            submitBtn.disabled = true;
+            loadingSpinner?.classList.remove('hidden');
+            showStatus('Nahrávám fotky...', 'info');
+
+            let successCount = 0;
+            let errorCount = 0;
+
+            try {
+                for (const file of selectedFiles) {
+                    const base64Data = await getBase64(file);
+                    
+                    const payload = {
+                        filename: file.name,
+                        mimeType: file.type,
+                        base64: base64Data,
+                        password: password
+                    };
+
+                    const response = await fetch(endpointUrl, {
+                        method: 'POST',
+                        body: JSON.stringify(payload),
+                        headers: {
+                            'Content-Type': 'text/plain;charset=utf-8',
+                        }
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.status === 'success') {
+                        successCount++;
+                    } else {
+                        localStorage.removeItem('wedding_guest_password');
+                        if (passwordContainer) passwordContainer.classList.remove('hidden');
+                        throw new Error(result.message || 'Upload failed');
+                    }
+                }
+
+                // Cache password on success
+                localStorage.setItem('wedding_guest_password', password);
+                if (passwordContainer) passwordContainer.classList.add('hidden');
+
+                // Invalidate the gallery cache so the new photo is immediately visible
+                localStorage.removeItem('guest_gallery_data');
+                localStorage.removeItem('guest_gallery_timestamp');
+                window.dispatchEvent(new CustomEvent('guest-gallery-refresh'));
+
+                showStatus(`Úspěšně nahráno ${successCount} fotek!`, 'success');
+                selectedFiles = [];
+                updateFileList();
+                form.reset();
+
+            } catch (error: any) {
+                console.error('Upload error:', error);
+                errorCount++;
+                showStatus(`Chyba: ${error.message || 'Nahrávání se nezdařilo. Zkontrolujte heslo.'}`, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                loadingSpinner?.classList.add('hidden');
+            }
+        });
+
+        function showStatus(message: string, type: 'success' | 'error' | 'info') {
+            if (!statusMessage) return;
+            statusMessage.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800', 'bg-blue-100', 'text-blue-800');
+            
+            if (type === 'success') {
+                statusMessage.classList.add('bg-green-100', 'text-green-800');
+            } else if (type === 'error') {
+                statusMessage.classList.add('bg-red-100', 'text-red-800');
+            } else {
+                statusMessage.classList.add('bg-blue-100', 'text-blue-800');
+            }
+            
+            statusMessage.textContent = message;
+        }
+    }
+
+    document.addEventListener('astro:page-load', initUploader);
+    initUploader();
+</script>

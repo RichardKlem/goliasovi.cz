@@ -4,11 +4,14 @@ import backgroundImage from './backgroundImage';
 import badge from './badge';
 import customImage from './customImage';
 import footer from './footer';
+import { gallerySection } from './gallerySection';
+import { guestGallerySection } from './guestGallerySection';
 import header from './header';
-import weddingPage from './weddingPage';
+import { photoUploadSection } from './photoUploadSection';
 import siteConfig from './siteConfig';
-import { weddingSection } from './weddingSection';
 import { venueSection } from './venueSection';
+import weddingPage from './weddingPage';
+import { weddingSection } from './weddingSection';
 
 export const schemaTypes = [
     actionButton,
@@ -21,5 +24,8 @@ export const schemaTypes = [
     weddingPage,
     siteConfig,
     weddingSection,
-    venueSection
+    venueSection,
+    gallerySection,
+    photoUploadSection,
+    guestGallerySection
 ];

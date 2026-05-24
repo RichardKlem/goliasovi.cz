@@ -32,7 +32,13 @@ export default defineType({
             title: 'Sections',
             description: 'Add and order sections for the main page',
             type: 'array',
-            of: [{ type: 'weddingSection' }, { type: 'venueSection' }],
+            of: [
+                { type: 'weddingSection' },
+                { type: 'venueSection' },
+                { type: 'gallerySection' },
+                { type: 'photoUploadSection' },
+                { type: 'guestGallerySection' }
+            ],
             group: 'content'
         }),
         defineField({

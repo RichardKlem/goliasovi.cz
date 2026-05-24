@@ -16,7 +16,7 @@
     "@sanity/client": "^7.14.0",
     "@sanity/validation": "^3.14.4",
     "@tailwindcss/vite": "^4.1.18",
-    "astro": "^5.17.2",
+    "astro": "^6.3.7",
     "astro-icon": "^1.1.5",
     "astro-portabletext": "^0.13.0",
     "dotenv": "^16.6.1",

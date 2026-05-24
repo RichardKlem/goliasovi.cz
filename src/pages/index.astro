@@ -1,8 +1,11 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import WeddingSection from '../components/WeddingSection.astro';
+import GallerySection from '../components/GallerySection.astro';
+import GuestGallerySection from '../components/GuestGallerySection.astro';
+import PhotoUploadSection from '../components/PhotoUploadSection.astro';
 import VenueSection from '../components/VenueSection.astro';
+import WeddingSection from '../components/WeddingSection.astro';
 import WeddingSideNav from '../components/WeddingSideNav.astro';
+import Layout from '../layouts/Layout.astro';
 import { client } from '../utils/sanity-client';
 
 const query = `*[_type == "weddingPage"][0] {
@@ -25,7 +28,23 @@ const query = `*[_type == "weddingPage"][0] {
         venueMap,
         churchDirectionsUrl,
         venueDirectionsUrl,
-        instagramEmbed
+        instagramEmbed,
+        // Gallery Section fields
+        images[] {
+            asset->{
+                _id,
+                url,
+                metadata {
+                    dimensions
+                }
+            },
+            hotspot
+        },
+        // Photo Upload Section fields
+        description,
+        uploadEndpointUrl,
+        // Guest Gallery Section fields
+        driveEndpointUrl
     }
 }`;
 let pageData = null;
@@ -81,6 +100,37 @@ const sections = pageData?.sections || [];
                             venueMap={section.venueMap}
                             churchDirectionsUrl={section.churchDirectionsUrl}
                             venueDirectionsUrl={section.venueDirectionsUrl}
+                        />
+                    );
+                }
+                if (section._type === "gallerySection") {
+                    return (
+                        <GallerySection
+                            id={section.anchor}
+                            title={section.title}
+                            subtitle={section.subtitle}
+                            images={section.images}
+                        />
+                    );
+                }
+                if (section._type === "photoUploadSection") {
+                    return (
+                        <PhotoUploadSection
+                            id={section.anchor}
+                            title={section.title}
+                            subtitle={section.subtitle}
+                            description={section.description}
+                            uploadEndpointUrl={section.uploadEndpointUrl}
+                        />
+                    );
+                }
+                if (section._type === "guestGallerySection") {
+                    return (
+                        <GuestGallerySection
+                            id={section.anchor}
+                            title={section.title}
+                            subtitle={section.subtitle}
+                            driveEndpointUrl={section.driveEndpointUrl}
                         />
                     );
                 }

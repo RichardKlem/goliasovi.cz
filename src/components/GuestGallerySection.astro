@@ -1,0 +1,453 @@
+---
+interface Props {
+    id: string;
+    title: string;
+    subtitle?: string;
+    driveEndpointUrl: string;
+}
+
+const { id, title, subtitle, driveEndpointUrl } = Astro.props;
+---
+
+<section id={id} class="relative py-24 md:py-32 bg-stone-50 overflow-hidden">
+    <div class="container mx-auto px-4 md:px-8 relative z-10">
+        <div class="text-center max-w-3xl mx-auto mb-12">
+            <h2 class="font-serif text-4xl md:text-5xl lg:text-6xl text-stone-900 mb-6 font-medium tracking-tight">
+                {title}
+            </h2>
+            {subtitle && (
+                <p class="text-xl md:text-2xl text-stone-700 font-serif mb-4">
+                    {subtitle}
+                </p>
+            )}
+            <p class="text-lg text-stone-600 font-light tracking-wide max-w-2xl mx-auto">
+                Zde se zobrazí fotky, které jste nám nahráli. Pro přístup zadejte heslo.
+            </p>
+        </div>
+
+        <!-- Password Form -->
+        <div id="guest-gallery-auth" class="max-w-md mx-auto bg-white rounded-2xl p-8 shadow-sm border border-stone-100 mb-12 transition-all duration-500">
+            <form id="guest-gallery-form" class="space-y-6" data-endpoint={driveEndpointUrl}>
+                <div>
+                    <label for="gallery-password" class="block text-sm font-medium text-stone-700 mb-2">Heslo (Password)</label>
+                    <div class="relative">
+                        <input 
+                            type="password" 
+                            id="gallery-password" 
+                            name="password" 
+                            required 
+                            class="w-full px-4 py-3 rounded-lg border border-stone-300 focus:ring-2 focus:ring-stone-400 focus:border-stone-400 transition-colors pr-12"
+                            placeholder="Zadejte heslo..."
+                        />
+                        <button type="button" id="gallery-password-toggle" class="absolute inset-y-0 right-0 flex items-center pr-3 text-stone-400 hover:text-stone-600 focus:outline-none" title="Zobrazit heslo">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <button 
+                    type="submit" 
+                    id="gallery-submit-btn"
+                    class="w-full bg-stone-900 text-white py-3 px-4 rounded-lg font-medium hover:bg-stone-800 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-900 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                >
+                    <span>Zobrazit fotky</span>
+                    <svg id="gallery-loading-spinner" class="animate-spin h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
+                
+                <div id="gallery-status-message" class="hidden rounded-lg p-4 text-sm text-center"></div>
+            </form>
+        </div>
+
+        <!-- Loading Skeleton (hidden by default) -->
+        <div id="guest-gallery-skeleton" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {Array.from({ length: 6 }).map(() => (
+                <div class="bg-stone-200 animate-pulse rounded-2xl w-full aspect-square"></div>
+            ))}
+        </div>
+
+        <!-- Gallery Grid -->
+        <div id="guest-gallery-grid" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Images will be injected here via JS -->
+        </div>
+
+        <!-- Load More Trigger -->
+        <div id="load-more-trigger" class="h-20 w-full mt-8 flex justify-center items-center hidden">
+            <svg class="animate-spin h-8 w-8 text-stone-400 hidden" id="infinite-loading-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        </div>
+
+    </div>
+
+    <!-- Lightbox -->
+    <div id="guest-lightbox" class="fixed inset-0 z-50 bg-black/95 hidden opacity-0 transition-opacity duration-300 flex items-center justify-center">
+        <button id="guest-lightbox-close" class="absolute top-6 right-6 text-white/70 hover:text-white z-50 p-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+        <button id="guest-lightbox-prev" class="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 text-white/70 hover:text-white z-50 p-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <button id="guest-lightbox-next" class="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 text-white/70 hover:text-white z-50 p-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+        <div class="w-full h-full p-4 md:p-12 flex items-center justify-center relative">
+            <img id="guest-lightbox-img" src="" alt="Fullscreen guest image" class="max-w-full max-h-full object-contain rounded-md shadow-2xl" />
+            <!-- Lightbox loading indicator -->
+            <div id="guest-lightbox-loader" class="absolute inset-0 flex items-center justify-center hidden">
+                <svg class="animate-spin h-10 w-10 text-white/50" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    function initGuestGallery() {
+        const form = document.getElementById('guest-gallery-form') as HTMLFormElement;
+        const passwordInput = document.getElementById('gallery-password') as HTMLInputElement;
+        const passwordToggle = document.getElementById('gallery-password-toggle') as HTMLButtonElement;
+        const submitBtn = document.getElementById('gallery-submit-btn') as HTMLButtonElement;
+        const loadingSpinner = document.getElementById('gallery-loading-spinner');
+        const statusMessage = document.getElementById('gallery-status-message');
+        const authContainer = document.getElementById('guest-gallery-auth');
+        const grid = document.getElementById('guest-gallery-grid');
+        const skeleton = document.getElementById('guest-gallery-skeleton');
+        const loadMoreTrigger = document.getElementById('load-more-trigger');
+        const infiniteSpinner = document.getElementById('infinite-loading-spinner');
+
+        // Lightbox Elements
+        const lightbox = document.getElementById('guest-lightbox');
+        const lightboxImg = document.getElementById('guest-lightbox-img') as HTMLImageElement;
+        const lightboxLoader = document.getElementById('guest-lightbox-loader');
+        const closeBtn = document.getElementById('guest-lightbox-close');
+        const nextBtn = document.getElementById('guest-lightbox-next');
+        const prevBtn = document.getElementById('guest-lightbox-prev');
+
+        let allFiles: { id: string, name: string, thumbnailUrl?: string, fullUrl?: string }[] = [];
+        let currentChunkIndex = 0;
+        const CHUNK_SIZE = 6;
+        let lightboxIndex = 0;
+        let observer: IntersectionObserver | null = null;
+        let isRendering = false;
+
+        if (!form) return;
+
+        // Toggle password visibility
+        if (passwordToggle && passwordInput) {
+            passwordToggle.addEventListener('click', () => {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    passwordToggle.innerHTML = `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>`;
+                } else {
+                    passwordInput.type = 'password';
+                    passwordToggle.innerHTML = `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>`;
+                }
+            });
+        }
+
+        // Try load from cache first
+        const cachedPassword = localStorage.getItem('wedding_guest_password');
+        const cachedData = localStorage.getItem('guest_gallery_data');
+        const cacheTimestamp = localStorage.getItem('guest_gallery_timestamp');
+        
+        if (cachedPassword) {
+            passwordInput.value = cachedPassword;
+            const now = new Date().getTime();
+            // If cache is less than 5 minutes old (300,000 ms)
+            if (cachedData && cacheTimestamp && (now - parseInt(cacheTimestamp)) < 300000) {
+                try {
+                    allFiles = JSON.parse(cachedData);
+                    authContainer?.classList.add('hidden');
+                    
+                    if (allFiles.length > 0) {
+                        grid?.classList.remove('hidden');
+                        skeleton?.classList.remove('hidden');
+                        loadMoreTrigger?.classList.remove('hidden');
+                        renderNextChunk();
+                        setupObserver();
+                    } else {
+                        grid?.classList.remove('hidden');
+                        if (grid) grid.innerHTML = '<div class="col-span-full text-center text-stone-500 py-12">Zatím zde nejsou žádné fotky.</div>';
+                    }
+                } catch (e) {
+                    console.error("Cache parsing error", e);
+                    // Fallback to automatic fetch silently
+                    form.dispatchEvent(new Event('submit', { cancelable: true }));
+                }
+            } else {
+                // Have password but no valid data cache, so fetch automatically silently
+                form.dispatchEvent(new Event('submit', { cancelable: true }));
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const endpointUrl = form.getAttribute('data-endpoint');
+            if (!endpointUrl) return;
+
+            const password = passwordInput.value;
+
+            submitBtn.disabled = true;
+            loadingSpinner?.classList.remove('hidden');
+            if (statusMessage) statusMessage.classList.add('hidden');
+
+            try {
+                const url = new URL(endpointUrl);
+                url.searchParams.append('password', password);
+
+                const response = await fetch(url.toString(), { method: 'GET' });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    // Save to cache
+                    localStorage.setItem('wedding_guest_password', password);
+                    if (result.files) {
+                        localStorage.setItem('guest_gallery_data', JSON.stringify(result.files));
+                        localStorage.setItem('guest_gallery_timestamp', new Date().getTime().toString());
+                    }
+
+                    // Hide auth form
+                    authContainer?.classList.add('hidden');
+                    
+                    if (result.files && result.files.length > 0) {
+                        allFiles = result.files;
+                        // Reset everything in case this is a re-submit
+                        currentChunkIndex = 0;
+                        if (grid) grid.innerHTML = '';
+                        
+                        grid?.classList.remove('hidden');
+                        skeleton?.classList.remove('hidden');
+                        loadMoreTrigger?.classList.remove('hidden');
+
+                        renderNextChunk();
+                        setupObserver();
+                    } else {
+                        grid?.classList.remove('hidden');
+                        if (grid) grid.innerHTML = '<div class="col-span-full text-center text-stone-500 py-12">Zatím zde nejsou žádné fotky.</div>';
+                    }
+                } else {
+                    localStorage.removeItem('wedding_guest_password'); // clear bad password from cache
+                    throw new Error(result.message || 'Nesprávné heslo');
+                }
+            } catch (error: any) {
+                console.error('Fetch error:', error);
+                showStatus(error.message || 'Nepodařilo se načíst fotky.', 'error');
+                authContainer?.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                loadingSpinner?.classList.add('hidden');
+            }
+        });
+
+        function showStatus(message: string, type: 'error') {
+            if (!statusMessage) return;
+            statusMessage.classList.remove('hidden', 'bg-red-100', 'text-red-800');
+            statusMessage.classList.add('bg-red-100', 'text-red-800');
+            statusMessage.textContent = message;
+        }
+
+        function renderNextChunk() {
+            if (isRendering || currentChunkIndex >= allFiles.length) return;
+            isRendering = true;
+            
+            infiniteSpinner?.classList.remove('hidden');
+
+            const start = currentChunkIndex;
+            const end = Math.min(start + CHUNK_SIZE, allFiles.length);
+            const chunk = allFiles.slice(start, end);
+            
+            let loadedImages = 0;
+            let expectedImages = chunk.length;
+            const tempContainer = document.createElement('div');
+            
+            // We use the thumbnail endpoint for the grid for faster loading, and full size for lightbox
+            const html = chunk.map((f, i) => {
+                const absoluteIndex = start + i;
+                // If Drive API is enabled, use the CDN url. Otherwise fallback to old method.
+                const thumbUrl = f.thumbnailUrl ? `${f.thumbnailUrl}=s800` : `https://drive.google.com/thumbnail?id=${f.id}&sz=w800`;
+                
+                // Note: using aspect-square enforces a perfect grid
+                return `
+                    <div class="relative group cursor-pointer overflow-hidden rounded-2xl shadow-md bg-stone-200 aspect-square" data-index="${absoluteIndex}">
+                        <img data-src="${thumbUrl}" alt="Guest photo ${absoluteIndex}" referrerpolicy="no-referrer" class="w-full h-full object-cover opacity-0 transition-all duration-700 group-hover:scale-105 guest-img" />
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300"></div>
+                    </div>
+                `;
+            }).join('');
+
+            tempContainer.innerHTML = html;
+            const newItems = Array.from(tempContainer.children);
+            
+            newItems.forEach((item, index) => {
+                if (grid) grid.appendChild(item);
+                
+                // Lightbox listener
+                item.addEventListener('click', () => {
+                    const idx = parseInt(item.getAttribute('data-index') || '0', 10);
+                    openLightbox(idx);
+                });
+
+                // Image load listener
+                const imgNode = item.querySelector('.guest-img') as HTMLImageElement;
+                if (imgNode) {
+                    imgNode.addEventListener('load', () => handleImageLoad(imgNode, item as HTMLElement));
+                    imgNode.addEventListener('error', () => handleImageLoad(imgNode, item as HTMLElement));
+                    
+                    // Stagger the loading of images (150ms apart) to prevent 429 Too Many Requests
+                    setTimeout(() => {
+                        const dataSrc = imgNode.getAttribute('data-src');
+                        if (dataSrc) imgNode.src = dataSrc;
+                    }, index * 150);
+                }
+            });
+
+            function handleImageLoad(imgNode: HTMLImageElement, containerNode: HTMLElement) {
+                imgNode.classList.remove('opacity-0');
+                
+                loadedImages++;
+                
+                // Hide skeleton if this is the first chunk loading
+                if (start === 0 && skeleton && !skeleton.classList.contains('hidden')) {
+                    skeleton.classList.add('hidden');
+                }
+
+                // Unlock the rendering process only when ALL images in this chunk have finished downloading (or errored)
+                if (loadedImages >= expectedImages) {
+                    isRendering = false;
+                    currentChunkIndex = end;
+                    infiniteSpinner?.classList.add('hidden');
+                    
+                    if (currentChunkIndex >= allFiles.length) {
+                        loadMoreTrigger?.classList.add('hidden');
+                        if (observer && loadMoreTrigger) {
+                            observer.unobserve(loadMoreTrigger);
+                        }
+                    } else {
+                        // Sometimes the loaded images are still not tall enough to push the trigger off-screen (e.g. wide monitors)
+                        // This hack forces the observer to re-evaluate its state safely
+                        if (observer && loadMoreTrigger) {
+                            observer.unobserve(loadMoreTrigger);
+                            observer.observe(loadMoreTrigger);
+                        }
+                    }
+                }
+            }
+        }
+
+        function setupObserver() {
+            if (!loadMoreTrigger || observer) return;
+
+            observer = new IntersectionObserver((entries) => {
+                const entry = entries[0];
+                if (entry.isIntersecting && !isRendering && currentChunkIndex < allFiles.length) {
+                    renderNextChunk();
+                }
+            }, { rootMargin: '400px' }); // Trigger 400px before reaching the bottom
+
+            observer.observe(loadMoreTrigger);
+        }
+
+        // Lightbox Functions
+        function openLightbox(index: number) {
+            lightboxIndex = index;
+            updateLightboxImage();
+            
+            if (lightbox) {
+                lightbox.classList.remove('hidden');
+                setTimeout(() => {
+                    lightbox.classList.remove('opacity-0');
+                    lightbox.classList.add('opacity-100');
+                }, 10);
+            }
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+        }
+
+        function closeLightbox() {
+            if (lightbox) {
+                lightbox.classList.remove('opacity-100');
+                lightbox.classList.add('opacity-0');
+                setTimeout(() => {
+                    lightbox.classList.add('hidden');
+                    lightboxImg.src = ''; // Clear image to prevent ghosting on next open
+                }, 300);
+            }
+            document.body.style.overflow = '';
+        }
+
+        function updateLightboxImage() {
+            if (!allFiles.length) return;
+            lightboxLoader?.classList.remove('hidden');
+            lightboxImg.classList.add('opacity-0'); // fade out current
+            
+            // For lightbox, we can fetch a higher quality thumbnail or original
+            const file = allFiles[lightboxIndex];
+            const fileId = file.id;
+            
+            // Use CDN url if available, otherwise fallback
+            let fullUrl = file.thumbnailUrl ? `${file.thumbnailUrl}=s1600` : `https://drive.google.com/uc?export=view&id=${fileId}`;
+            
+            setTimeout(() => {
+                const img = new Image();
+                img.onload = () => {
+                    lightboxImg.src = fullUrl;
+                    lightboxLoader?.classList.add('hidden');
+                    lightboxImg.classList.remove('opacity-0');
+                };
+                img.onerror = () => {
+                    // Fallback if it fails
+                    lightboxImg.src = file.thumbnailUrl ? `${file.thumbnailUrl}=s1200` : `https://drive.google.com/thumbnail?id=${fileId}&sz=w1200`;
+                    lightboxLoader?.classList.add('hidden');
+                    lightboxImg.classList.remove('opacity-0');
+                }
+                img.src = fullUrl;
+            }, 150);
+        }
+
+        closeBtn?.addEventListener('click', closeLightbox);
+        nextBtn?.addEventListener('click', () => {
+            lightboxIndex = (lightboxIndex + 1) % allFiles.length;
+            updateLightboxImage();
+        });
+        prevBtn?.addEventListener('click', () => {
+            lightboxIndex = (lightboxIndex - 1 + allFiles.length) % allFiles.length;
+            updateLightboxImage();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (!lightbox?.classList.contains('hidden')) {
+                if (e.key === 'Escape') closeLightbox();
+                if (e.key === 'ArrowRight') {
+                    lightboxIndex = (lightboxIndex + 1) % allFiles.length;
+                    updateLightboxImage();
+                }
+                if (e.key === 'ArrowLeft') {
+                    lightboxIndex = (lightboxIndex - 1 + allFiles.length) % allFiles.length;
+                    updateLightboxImage();
+                }
+            }
+        });
+    }
+
+    document.addEventListener('astro:page-load', initGuestGallery);
+    initGuestGallery();
+
+    // Listen for successful uploads to instantly refresh the gallery below
+    window.addEventListener('guest-gallery-refresh', () => {
+        const galleryForm = document.getElementById('guest-gallery-form') as HTMLFormElement;
+        const galleryPassword = document.getElementById('gallery-password') as HTMLInputElement;
+        if (galleryForm && galleryPassword && galleryPassword.value) {
+            // Re-fetch automatically
+            galleryForm.dispatchEvent(new Event('submit', { cancelable: true }));
+        }
+    });
+</script>
