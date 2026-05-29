@@ -80,6 +80,13 @@ const { title, logo, logoIcon, navLinks, 'data-sb-field-path': fieldPath } = Ast
 
         <!-- Right: Theme Toggle -->
         <div class="flex items-center justify-end gap-4">
+            <a href="/live" target="_blank" class="hidden sm:inline-flex btn btn-primary btn-sm rounded-full font-['Playfair_Display'] font-bold tracking-wider hover:scale-105 transition-transform">
+                <span class="relative flex h-2 w-2 mr-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                </span>
+                Živý přenos
+            </a>
             <label
                 class="swap swap-rotate hover:text-primary transition-colors"
             >
@@ -124,6 +131,15 @@ const { title, logo, logoIcon, navLinks, 'data-sb-field-path': fieldPath } = Ast
                         class="flex flex-col px-4 pb-6 pt-14"
                         data-sb-field-path=".navLinks"
                     >
+                        <li>
+                            <a href="/live" target="_blank" class="flex items-center w-full px-4 py-3.5 text-primary font-bold tracking-wider uppercase text-xs">
+                                <span class="relative flex h-2 w-2 mr-3">
+                                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                  <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                </span>
+                                Sledovat živý přenos
+                            </a>
+                        </li>
                         {
                             navLinks?.map((item, index) => (
                                 <li>

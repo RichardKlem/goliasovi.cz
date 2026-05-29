@@ -143,16 +143,31 @@ const defaultSubtitle = type === 'story' ? 'Příběh naší lásky' : type === 
                     </div>
                 ) : (
                     imageSrc && (
-                        <div
-                            class={`relative aspect-[4/5] md:aspect-[1/1] w-full rounded-[60px] overflow-hidden shadow-2xl reveal-item-3 ${align === "right" ? "md:col-start-1" : ""}`}
-                        >
-                            <div class="absolute inset-0 bg-primary/5 mix-blend-multiply z-10 pointer-events-none" />
-                            <img
-                                src={imageSrc}
-                                alt={title}
-                                class="w-full h-full object-cover transition-transform duration-1000 hover:scale-105"
-                                loading="lazy"
-                            />
+                        <div class={`flex flex-col items-center gap-6 reveal-item-3 ${align === "right" ? "md:col-start-1" : ""}`}>
+                            <div
+                                class={`relative aspect-[4/5] md:aspect-[1/1] w-full rounded-[60px] overflow-hidden shadow-2xl`}
+                            >
+                                <div class="absolute inset-0 bg-primary/5 mix-blend-multiply z-10 pointer-events-none" />
+                                <img
+                                    src={imageSrc}
+                                    alt={title}
+                                    class="w-full h-full object-cover transition-transform duration-1000 hover:scale-105"
+                                    loading="lazy"
+                                />
+                            </div>
+                            {type === 'ceremony' && (
+                                <a
+                                    href="/live"
+                                    target="_blank"
+                                    class="btn btn-outline btn-primary btn-lg rounded-full px-8 shadow-lg hover:shadow-primary/10 transition-all font-['Playfair_Display'] font-bold w-full sm:w-auto text-center inline-flex items-center justify-center mt-2"
+                                >
+                                    <span class="relative flex h-3 w-3 mr-3">
+                                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                      <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                                    </span>
+                                    Sledovat živý přenos
+                                </a>
+                            )}
                         </div>
                     )
                 )

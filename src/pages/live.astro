@@ -1,0 +1,208 @@
+---
+// src/pages/live.astro
+---
+
+<!doctype html>
+<html lang="cs" data-theme="dark">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Živý přenos | Svatba Goliášovi</title>
+        
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Dancing+Script:wght@400..700&family=Mulish:ital,wght@0,400..900;1,400..900&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="/src/styles/globals.css" />
+    </head>
+    <body class="antialiased bg-black overflow-hidden m-0 p-0 w-full h-screen">
+        <main class="w-full h-full relative flex items-center justify-center">
+            
+            <!-- Password Overlay -->
+            <div id="password-overlay" class="absolute inset-0 z-50 flex items-center justify-center bg-base-100 p-6">
+                <div class="max-w-md w-full bg-base-100/50 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-base-content/10">
+                    <h1 class="text-3xl font-['Playfair_Display'] font-black text-center mb-6">Živý přenos</h1>
+                    <p class="text-base-content/70 text-center mb-8">Zadejte prosím heslo pro přístup k živému přenosu ze svatby.</p>
+                    <div class="relative mb-6">
+                        <input 
+                            type="password" 
+                            id="live-password" 
+                            class="input input-bordered w-full pr-12 focus:border-primary focus:ring-primary rounded-xl"
+                            placeholder="Zadejte heslo..."
+                        />
+                        <button type="button" id="live-password-toggle" class="absolute inset-y-0 right-0 flex items-center pr-3 text-stone-400 hover:text-stone-600 focus:outline-none" title="Zobrazit heslo">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                        </button>
+                    </div>
+                    <button id="live-submit" class="btn btn-primary w-full rounded-xl text-lg font-bold">Vstoupit</button>
+                    <p id="live-error" class="text-error text-sm text-center mt-4 hidden">Nesprávné heslo. Zkuste to prosím znovu.</p>
+                    <div class="mt-6 text-center">
+                        <a href="/" class="text-sm opacity-70 hover:opacity-100 hover:text-primary transition-colors">← Zpět na web</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video Player Container (hidden initially) -->
+            <div id="player-container" class="w-full h-full hidden relative bg-black">
+                <a href="/" class="absolute top-6 left-6 z-40 btn btn-circle btn-neutral opacity-50 hover:opacity-100 transition-opacity" title="Zpět na web">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                </a>
+                
+                <!-- Offline Overlay -->
+                <div id="offline-overlay" class="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/90 p-6 hidden transition-opacity duration-500">
+                    <div class="max-w-md text-center space-y-6">
+                        <span class="relative flex h-6 w-6 mx-auto mb-4">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/40 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-6 w-6 bg-primary"></span>
+                        </span>
+                        <h2 class="text-2xl font-['Playfair_Display'] font-bold text-white">Přenos zatím nezačal</h2>
+                        <p class="text-white/70">Živý přenos bude brzy zahájen. Čekáme na signál...</p>
+                        <p class="text-white/50 text-sm mt-4">Stránka se bude automaticky obnovovat.</p>
+                    </div>
+                </div>
+
+                <video id="video" class="w-full h-full object-contain" controls autoplay playsinline></video>
+            </div>
+        </main>
+
+        <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8"></script>
+        <script>
+            const passwordOverlay = document.getElementById('password-overlay');
+            const playerContainer = document.getElementById('player-container');
+            const passwordInput = document.getElementById('live-password') as HTMLInputElement;
+            const passwordToggle = document.getElementById('live-password-toggle') as HTMLButtonElement;
+            const submitButton = document.getElementById('live-submit');
+            const errorMsg = document.getElementById('live-error');
+            const video = document.getElementById('video') as HTMLVideoElement;
+            const offlineOverlay = document.getElementById('offline-overlay');
+
+            const CORRECT_PASSWORD = 'goliasovi2026';
+            const IVS_URL = 'https://94bec40a43ab.eu-central-1.playback.live-video.net/api/video/v1/eu-central-1.926337676239.channel.whXwATQ89kyM.m3u8';
+
+            let retryTimeout: NodeJS.Timeout | null = null;
+            let hlsInstance: any = null;
+
+            function showOffline() {
+                if (offlineOverlay) {
+                    offlineOverlay.classList.remove('hidden');
+                    offlineOverlay.style.opacity = '1';
+                }
+                if (video) {
+                    video.style.opacity = '0'; // hide video artifact
+                }
+                
+                // Retry every 10 seconds
+                if (retryTimeout) clearTimeout(retryTimeout);
+                retryTimeout = setTimeout(() => {
+                    initPlayer();
+                }, 10000);
+            }
+
+            function showOnline() {
+                if (offlineOverlay) {
+                    offlineOverlay.style.opacity = '0';
+                    setTimeout(() => offlineOverlay.classList.add('hidden'), 500);
+                }
+                if (video) {
+                    video.style.opacity = '1';
+                }
+                if (retryTimeout) clearTimeout(retryTimeout);
+            }
+
+            function initPlayer() {
+                // @ts-ignore
+                const Hls = window.Hls;
+                
+                if (hlsInstance) {
+                    hlsInstance.destroy();
+                }
+
+                if (Hls && Hls.isSupported()) {
+                    const hls = new Hls();
+                    hlsInstance = hls;
+                    hls.loadSource(IVS_URL);
+                    hls.attachMedia(video);
+                    
+                    hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                        showOnline();
+                        video.play().catch(e => console.log('Autoplay prevented:', e));
+                    });
+
+                    hls.on(Hls.Events.ERROR, function (_event: any, data: any) {
+                        if (data.fatal) {
+                            switch (data.type) {
+                                case Hls.ErrorTypes.NETWORK_ERROR:
+                                    // Usually means stream hasn't started (404 on m3u8)
+                                    console.log('Stream network error. Probably offline.');
+                                    showOffline();
+                                    break;
+                                case Hls.ErrorTypes.MEDIA_ERROR:
+                                    hls.recoverMediaError();
+                                    break;
+                                default:
+                                    showOffline();
+                                    break;
+                            }
+                        }
+                    });
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    // Native HLS support (Safari)
+                    video.src = IVS_URL;
+                    
+                    video.addEventListener('loadedmetadata', function () {
+                        showOnline();
+                        video.play().catch(e => console.log('Autoplay prevented:', e));
+                    });
+
+                    video.addEventListener('error', function () {
+                        console.log('Native video error. Probably offline.');
+                        showOffline();
+                    });
+                }
+            }
+
+            function checkPassword(pass: string) {
+                if (pass === CORRECT_PASSWORD) {
+                    localStorage.setItem('wedding_guest_password', pass);
+                    if (passwordOverlay) passwordOverlay.style.display = 'none';
+                    if (playerContainer) playerContainer.classList.remove('hidden');
+                    initPlayer();
+                } else {
+                    if (errorMsg) errorMsg.classList.remove('hidden');
+                }
+            }
+
+            // Check cached password first
+            const cachedPassword = localStorage.getItem('wedding_guest_password');
+            if (cachedPassword === CORRECT_PASSWORD) {
+                checkPassword(cachedPassword);
+            }
+
+            if (submitButton && passwordInput) {
+                submitButton.addEventListener('click', () => {
+                    checkPassword(passwordInput.value);
+                });
+                passwordInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        checkPassword(passwordInput.value);
+                    }
+                });
+            }
+
+            if (passwordToggle && passwordInput) {
+                passwordToggle.addEventListener('click', () => {
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        passwordToggle.innerHTML = `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>`;
+                    } else {
+                        passwordInput.type = 'password';
+                        passwordToggle.innerHTML = `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>`;
+                    }
+                });
+            }
+        </script>
+    </body>
+</html>
