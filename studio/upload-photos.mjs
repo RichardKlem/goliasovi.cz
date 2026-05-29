@@ -1,7 +1,7 @@
-import { createReadStream } from 'fs';
-import { extname, join } from 'path';
+import { createReadStream } from 'node:fs';
+import { readdir, stat } from 'node:fs/promises';
+import { extname, join } from 'node:path';
 import { createClient } from '@sanity/client';
-import { readdir, stat } from 'fs/promises';
 
 // Load Sanity configuration from sanity.cli.ts or .env
 // We need projectId, dataset, and a write token.

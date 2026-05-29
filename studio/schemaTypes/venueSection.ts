@@ -47,6 +47,7 @@ export const venueSection = defineType({
             description: 'Link to Google Maps for "Get Directions"',
             type: 'url'
         }),
+
         defineField({
             name: 'venueTitle',
             title: 'Celebration Venue Title',

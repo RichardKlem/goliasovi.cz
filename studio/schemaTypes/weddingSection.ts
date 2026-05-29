@@ -49,6 +49,40 @@ export const weddingSection = defineType({
             of: [{ type: 'block' }]
         }),
         defineField({
+            name: 'schedule',
+            title: 'Harmonogram / Timetable',
+            description: 'Optional schedule to display below the content. You can use this for any section.',
+            type: 'array',
+            of: [
+                {
+                    type: 'object',
+                    fields: [
+                        { name: 'time', title: 'Time', type: 'string', validation: (Rule) => Rule.required() },
+                        { name: 'description', title: 'Description', type: 'text', rows: 2, validation: (Rule) => Rule.required() }
+                    ],
+                    preview: {
+                        select: {
+                            title: 'time',
+                            subtitle: 'description'
+                        }
+                    }
+                }
+            ]
+        }),
+        defineField({
+            name: 'greetingUrl',
+            title: 'Greeting / Meeting Point Map Link',
+            description: 'Optional URL for the "Sraz a přivítání" button (e.g. Google Maps link)',
+            type: 'url'
+        }),
+        defineField({
+            name: 'mapEmbed',
+            title: 'Map Embed (Iframe)',
+            description: 'Optional map embed (e.g. Google Maps iframe) to display below the content',
+            type: 'text',
+            rows: 3
+        }),
+        defineField({
             name: 'image',
             title: 'Image',
             type: 'image',
