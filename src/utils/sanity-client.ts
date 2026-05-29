@@ -27,6 +27,7 @@ export const client = createClient(sanityConfig);
 
 const builder = imageUrlBuilder(client);
 
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 export function urlForImage(source: any) {
     return builder.image(source);
 }

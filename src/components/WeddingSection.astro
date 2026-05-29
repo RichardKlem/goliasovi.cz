@@ -7,13 +7,18 @@ interface Props {
     title: string;
     subtitle?: string;
     type: 'story' | 'ceremony' | 'celebration' | 'other';
+    // biome-ignore lint/suspicious/noExplicitAny: Sanity content block is not fully typed
     content: any;
+    // biome-ignore lint/suspicious/noExplicitAny: Sanity image is not fully typed
     image?: any;
     instagramEmbed?: string;
+    schedule?: { time: string; description: string }[];
+    greetingUrl?: string;
+    mapEmbed?: string;
     align?: 'left' | 'right';
 }
 
-const { id, title, subtitle, type, content, image, instagramEmbed, align = 'left' } = Astro.props;
+const { id, title, subtitle, type, content, schedule, greetingUrl, mapEmbed, image, instagramEmbed, align = 'left' } = Astro.props;
 
 const imageSrc = image ? (typeof image === 'string' ? image : urlForImage(image).url()) : null;
 
@@ -62,6 +67,67 @@ const defaultSubtitle = type === 'story' ? 'Příběh naší lásky' : type === 
                     class={`prose prose-xl prose-p:text-base-content/80 prose-headings:font-['Playfair_Display'] reveal-item-2 ${!(instagramEmbed || imageSrc) ? "mx-auto" : ""}`}
                 >
                     <PortableText value={content} />
+
+                    {
+                        schedule && schedule.length > 0 && (
+                            <div class="my-10 overflow-hidden rounded-3xl border border-base-content/10 bg-base-100/50 backdrop-blur-md shadow-2xl max-w-2xl w-full mx-auto">
+                                <table class="w-full text-left border-collapse m-0">
+                                    <tbody>
+                                        {schedule.map(({ time, description }) => (
+                                            <tr class="border-b border-base-content/10 last:border-b-0 hover:bg-base-content/5 transition-colors duration-300">
+                                                <td class="py-5 px-6 w-28 md:w-36 align-middle border-0">
+                                                    <span class="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-base-content/10 text-base-content font-['Playfair_Display'] font-black text-base md:text-lg tracking-wider shadow-inner whitespace-nowrap">
+                                                        {time}
+                                                    </span>
+                                                </td>
+                                                <td class="py-5 pr-6 text-base-content/90 font-semibold text-base md:text-lg align-middle leading-relaxed border-0 m-0">
+                                                    {description}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )
+                    }
+
+                    {
+                        mapEmbed && (
+                            <div class="mt-10 w-full reveal-item-2">
+                                <div
+                                    class="aspect-video w-full rounded-3xl overflow-hidden shadow-xl border-4 border-base-content/10 map-container"
+                                    set:html={mapEmbed}
+                                />
+                            </div>
+                        )
+                    }
+
+                    {
+                        greetingUrl && (
+                            <div class="mt-8 flex justify-center w-full">
+                                <a
+                                    href={greetingUrl}
+                                    target="_blank"
+                                    class="btn btn-outline btn-primary btn-lg rounded-full px-8 shadow-lg hover:shadow-primary/10 transition-all font-['Playfair_Display'] font-bold w-full sm:w-auto text-center inline-flex items-center justify-center"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="w-6 h-6 mr-2"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <circle cx="12" cy="12" r="10" />
+                                        <path d="M16 12l-4-4-4 4M12 8v8" />
+                                    </svg>
+                                    Sraz a přivítání hostů
+                                </a>
+                            </div>
+                        )
+                    }
                 </div>
             </div>
 
@@ -157,5 +223,11 @@ const defaultSubtitle = type === 'story' ? 'Příběh naší lásky' : type === 
     .wedding-section :global(blockquote.instagram-media) {
         margin: 0 auto !important;
         min-height: 500px;
+    }
+
+    /* Style for map iframes to be responsive */
+    .wedding-section :global(.map-container iframe) {
+        width: 100% !important;
+        height: 100% !important;
     }
 </style>

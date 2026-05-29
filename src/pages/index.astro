@@ -20,6 +20,9 @@ const query = `*[_type == "weddingPage"][0] {
         // Wedding Section fields
         type,
         content,
+        schedule,
+        greetingUrl,
+        mapEmbed,
         image,
         // Venue Section fields
         churchTitle,
@@ -83,6 +86,9 @@ const sections = pageData?.sections || [];
                             type={section.type}
                             align={align}
                             content={section.content}
+                            schedule={section.schedule}
+                            greetingUrl={section.greetingUrl}
+                            mapEmbed={section.mapEmbed}
                             image={section.image}
                             instagramEmbed={section.instagramEmbed}
                         />
